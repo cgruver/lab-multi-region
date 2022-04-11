@@ -230,9 +230,8 @@ cat <<EOF | oc -n k8ssandra-operator apply -f -
 apiVersion: k8ssandra.io/v1alpha1
 kind: K8ssandraCluster
 metadata:
-  name: k8ssandra-cluster-1
+  name: k8ssandra-cluster
 spec:
-  auth: false
   cassandra:
     serverVersion: ${CASS_VER}
     serverImage: ${PROXY_REGISTRY}/k8ssandra/cass-management-api:${CASS_VER}
@@ -294,7 +293,7 @@ spec:
           - ReadWriteOnce
         resources:
           requests:
-            storage: 20Gi
+            storage: 5Gi
     config:
       jvmOptions:
         heapSize: 512M
@@ -303,15 +302,7 @@ spec:
     datacenters:
       - metadata:
           name: dc1
-        size: 1
-        stargate:
-          size: 1
-          heapSize: 256M
-          containerImage: 
-            registry: ${PROXY_REGISTRY}
-            repository: k8ssandra
-            name: stargate-4_0
-            tag: ${STARGATE_VER}
+        size: 3
         jmxInitContainerImage:
           registry: ${PROXY_REGISTRY}
           repository: k8ssandra
@@ -320,15 +311,7 @@ spec:
       - metadata:
           name: dc2
         k8sContext: okd4-region-02
-        size: 1
-        stargate:
-          size: 1
-          heapSize: 256M
-          containerImage: 
-            registry: ${PROXY_REGISTRY}
-            repository: k8ssandra
-            name: stargate-4_0
-            tag: ${STARGATE_VER}
+        size: 3
         jmxInitContainerImage:
           registry: ${PROXY_REGISTRY}
           repository: k8ssandra
@@ -337,7 +320,16 @@ spec:
       - metadata:
           name: dc3
         k8sContext: okd4-region-03
-        size: 1
+        size: 3
+        jmxInitContainerImage:
+          registry: ${PROXY_REGISTRY}
+          repository: k8ssandra
+          name: busybox
+          tag: ${BUSYBOX_VER}
+EOF
+
+
+
         stargate:
           size: 1
           heapSize: 256M
@@ -346,13 +338,6 @@ spec:
             repository: k8ssandra
             name: stargate-4_0
             tag: ${STARGATE_VER}
-        jmxInitContainerImage:
-          registry: ${PROXY_REGISTRY}
-          repository: k8ssandra
-          name: busybox
-          tag: ${BUSYBOX_VER}
-EOF
-  
 ```
 
 ## Delete Cluster
@@ -379,7 +364,6 @@ oc --kubeconfig ${CONTROL_PLANE_KUBE} -n k8ssandra-operator scale deployment k8s
 ## Delete K8ssandra
 
 ```bash
-
 oc --kubeconfig $(labcli -d=dc1 --kube | grep -v domain:) delete -f ${OKD_LAB_PATH}/k8ssandra-work-dir/k8ssandra-control-plane.yaml
 oc --kubeconfig $(labcli -d=dc2 --kube | grep -v domain:) delete -f ${OKD_LAB_PATH}/k8ssandra-work-dir/k8ssandra-data-plane.yaml
 oc --kubeconfig $(labcli -d=dc3 --kube | grep -v domain:) delete -f ${OKD_LAB_PATH}/k8ssandra-work-dir/k8ssandra-data-plane.yaml
