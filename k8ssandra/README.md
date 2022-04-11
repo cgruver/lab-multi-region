@@ -38,68 +38,124 @@ EOF
 
 kustomize build ${OKD_LAB_PATH}/k8ssandra-work-dir/cert-manager-install > ${OKD_LAB_PATH}/k8ssandra-work-dir/cert-manager-install.yaml
 
-for cluster in dc1 dc2 dc3
+for i in dc1 dc2 dc3
 do
-  labenv -k -d=${cluster}
-  oc create -f ${OKD_LAB_PATH}/k8ssandra-work-dir/cert-manager-install.yaml
+  REGION_KUBE=$(labcli -d=${i} --kube | grep -v domain:)
+  oc --kubeconfig ${REGION_KUBE} create -f ${OKD_LAB_PATH}/k8ssandra-work-dir/cert-manager-install.yaml
 done
 ```
 
 ### Install K8ssandra Operator
 
 ```bash
-CASS_VER=v1.10.1
+CASS_OPER_VER=v1.10.3
 K8SSANDRA_VER=v1.0.1
+BUSYBOX_VER=1.34.1
+STARGATE_VER=v1.0.45
+REAPER_VER=3.1.1
+CASS_VER=4.0.1
+CASS_CONFIG_BUILDER_VER=1.0.4-ubi7
+MEDUSA_VER=0.12.2
 
 mkdir -p ${OKD_LAB_PATH}/k8ssandra-work-dir/control-plane
 mkdir -p ${OKD_LAB_PATH}/k8ssandra-work-dir/data-plane
 
-podman pull docker.io/k8ssandra/cass-operator:${CASS_VER}
+podman pull docker.io/k8ssandra/cass-operator:${CASS_OPER_VER}
 podman pull docker.io/k8ssandra/k8ssandra-operator:${K8SSANDRA_VER}
+podman pull docker.io/library/busybox:${BUSYBOX_VER}
+podman pull docker.io/stargateio/stargate-4_0:${STARGATE_VER}
+podman pull docker.io/thelastpickle/cassandra-reaper:${REAPER_VER}
+podman pull docker.io/k8ssandra/medusa:${MEDUSA_VER}
+podman pull docker.io/k8ssandra/cass-management-api:${CASS_VER}
+podman pull docker.io/k8ssandra/system-logger:${CASS_OPER_VER}
+podman pull docker.io/datastax/cass-config-builder:${CASS_CONFIG_BUILDER_VER}
 
-
-podman tag docker.io/k8ssandra/cass-operator:${CASS_VER} ${LOCAL_REGISTRY}/k8ssandra/cass-operator:${CASS_VER}
+podman tag docker.io/k8ssandra/cass-operator:${CASS_OPER_VER} ${LOCAL_REGISTRY}/k8ssandra/cass-operator:${CASS_OPER_VER}
 podman tag docker.io/k8ssandra/k8ssandra-operator:${K8SSANDRA_VER} ${LOCAL_REGISTRY}/k8ssandra/k8ssandra-operator:${K8SSANDRA_VER}
+podman tag docker.io/library/busybox:${BUSYBOX_VER} ${LOCAL_REGISTRY}/k8ssandra/busybox:${BUSYBOX_VER}
+podman tag docker.io/stargateio/stargate-4_0:${STARGATE_VER} ${LOCAL_REGISTRY}/k8ssandra/stargate-4_0:${STARGATE_VER}
+podman tag docker.io/thelastpickle/cassandra-reaper:${REAPER_VER} ${LOCAL_REGISTRY}/k8ssandra/cassandra-reaper:${REAPER_VER}
+podman tag docker.io/k8ssandra/medusa:${MEDUSA_VER} ${LOCAL_REGISTRY}/k8ssandra/medusa:latest
+podman tag docker.io/k8ssandra/cass-management-api:${CASS_VER} ${LOCAL_REGISTRY}/k8ssandra/cass-management-api:${CASS_VER}
+podman tag docker.io/k8ssandra/system-logger:${CASS_OPER_VER} ${LOCAL_REGISTRY}/k8ssandra/system-logger:${CASS_OPER_VER}
+podman tag docker.io/datastax/cass-config-builder:${CASS_CONFIG_BUILDER_VER} ${LOCAL_REGISTRY}/k8ssandra/cass-config-builder:${CASS_CONFIG_BUILDER_VER}
 
-
-podman push --tls-verify=false ${LOCAL_REGISTRY}/k8ssandra/cass-operator:${CASS_VER}
+podman push --tls-verify=false ${LOCAL_REGISTRY}/k8ssandra/cass-operator:${CASS_OPER_VER}
 podman push --tls-verify=false ${LOCAL_REGISTRY}/k8ssandra/k8ssandra-operator:${K8SSANDRA_VER}
+podman push --tls-verify=false ${LOCAL_REGISTRY}/k8ssandra/busybox:${BUSYBOX_VER}
+podman push --tls-verify=false ${LOCAL_REGISTRY}/k8ssandra/stargate-4_0:${STARGATE_VER}
+podman push --tls-verify=false ${LOCAL_REGISTRY}/k8ssandra/cassandra-reaper:${REAPER_VER}
+podman push --tls-verify=false ${LOCAL_REGISTRY}/k8ssandra/medusa:latest
+podman push --tls-verify=false ${LOCAL_REGISTRY}/k8ssandra/cass-management-api:${CASS_VER}
+podman push --tls-verify=false ${LOCAL_REGISTRY}/k8ssandra/system-logger:${CASS_OPER_VER}
+podman push --tls-verify=false ${LOCAL_REGISTRY}/k8ssandra/cass-config-builder:${CASS_CONFIG_BUILDER_VER}
 
 cat <<EOF > ${OKD_LAB_PATH}/k8ssandra-work-dir/control-plane/kustomization.yaml
 namespace: k8ssandra-operator
 resources:
-- github.com/k8ssandra/k8ssandra-operator/config/deployments/control-plane?ref=v1.0.1
+- github.com/k8ssandra/k8ssandra-operator/config/deployments/control-plane?ref=${K8SSANDRA_VER}
 images:
 - name: k8ssandra/k8ssandra-operator
   newTag: ${K8SSANDRA_VER}
-  newName: ${LOCAL_REGISTRY}/k8ssandra/k8ssandra-operator
+  newName: ${PROXY_REGISTRY}/k8ssandra/k8ssandra-operator
 - name: k8ssandra/cass-operator
-  newTag: ${CASS_VER}
-  newName: ${LOCAL_REGISTRY}/k8ssandra/cass-operator
+  newTag: ${CASS_OPER_VER}
+  newName: ${PROXY_REGISTRY}/k8ssandra/cass-operator
 EOF
 
 cat <<EOF > ${OKD_LAB_PATH}/k8ssandra-work-dir/data-plane/kustomization.yaml
 namespace: k8ssandra-operator
 resources:
-- github.com/k8ssandra/k8ssandra-operator/config/deployments/data-plane?ref=v1.0.1
+- github.com/k8ssandra/k8ssandra-operator/config/deployments/data-plane?ref=${K8SSANDRA_VER}
 images:
 - name: k8ssandra/k8ssandra-operator
   newTag: ${K8SSANDRA_VER}
-  newName: ${LOCAL_REGISTRY}/k8ssandra/k8ssandra-operator
+  newName: ${PROXY_REGISTRY}/k8ssandra/k8ssandra-operator
 - name: k8ssandra/cass-operator
-  newTag: ${CASS_VER}
-  newName: ${LOCAL_REGISTRY}/k8ssandra/cass-operator
+  newTag: ${CASS_OPER_VER}
+  newName: ${PROXY_REGISTRY}/k8ssandra/cass-operator
 EOF
 
 kustomize build ${OKD_LAB_PATH}/k8ssandra-work-dir/control-plane > ${OKD_LAB_PATH}/k8ssandra-work-dir/k8ssandra-control-plane.yaml
 kustomize build ${OKD_LAB_PATH}/k8ssandra-work-dir/data-plane > ${OKD_LAB_PATH}/k8ssandra-work-dir/k8ssandra-data-plane.yaml
 
-labenv -k -d=dc1
-oc create -f ${OKD_LAB_PATH}/k8ssandra-work-dir/k8ssandra-control-plane.yaml
-labenv -k -d=dc2
-oc create -f ${OKD_LAB_PATH}/k8ssandra-work-dir/k8ssandra-data-plane.yaml
-labenv -k -d=dc3
-oc create -f ${OKD_LAB_PATH}/k8ssandra-work-dir/k8ssandra-data-plane.yaml
+oc --kubeconfig $(labcli -d=dc1 --kube | grep -v domain:) create -f ${OKD_LAB_PATH}/k8ssandra-work-dir/k8ssandra-control-plane.yaml
+oc --kubeconfig $(labcli -d=dc2 --kube | grep -v domain:) create -f ${OKD_LAB_PATH}/k8ssandra-work-dir/k8ssandra-data-plane.yaml
+oc --kubeconfig $(labcli -d=dc3 --kube | grep -v domain:) create -f ${OKD_LAB_PATH}/k8ssandra-work-dir/k8ssandra-data-plane.yaml
+
+cat <<EOF > ${OKD_LAB_PATH}/k8ssandra-work-dir/cass-operator-manager-config-patch.yaml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: cass-operator-manager-config
+data:
+  image_config.yaml: |
+    apiVersion: config.k8ssandra.io/v1beta1
+    kind: ImageConfig
+    metadata:
+      name: image-config
+    images:
+      system-logger: "k8ssandra/system-logger:${CASS_OPER_VER}"
+      config-builder: "k8ssandra/cass-config-builder:${CASS_CONFIG_BUILDER_VER}"
+      cassandra:
+        "${CASS_VER}": "k8ssandra/cass-management-api:${CASS_VER}"
+    imageRegistry: "${PROXY_REGISTRY}"
+    imagePullPolicy: IfNotPresent
+    defaults:
+      cassandra:
+        repository: "k8ssandra/cass-management-api"
+EOF
+
+for i in dc1 dc2 dc3
+do
+  REGION_KUBE=$(labcli -d=${i} --kube | grep -v domain:)
+  oc --kubeconfig ${REGION_KUBE} -n k8ssandra-operator patch configmap cass-operator-manager-config --patch "$( cat ${OKD_LAB_PATH}/k8ssandra-work-dir/cass-operator-manager-config-patch.yaml)"
+  oc --kubeconfig ${REGION_KUBE} -n k8ssandra-operator scale deployment cass-operator-controller-manager --replicas=0
+  oc --kubeconfig ${REGION_KUBE} -n k8ssandra-operator scale deployment k8ssandra-operator --replicas=0
+  sleep 3
+  oc --kubeconfig ${REGION_KUBE} -n k8ssandra-operator scale deployment cass-operator-controller-manager --replicas=1
+  oc --kubeconfig ${REGION_KUBE} -n k8ssandra-operator scale deployment k8ssandra-operator --replicas=1
+done
 
 ```
 
@@ -108,6 +164,8 @@ oc create -f ${OKD_LAB_PATH}/k8ssandra-work-dir/k8ssandra-data-plane.yaml
 ```bash
 mkdir -p ${OKD_LAB_PATH}/k8ssandra-work-dir/kubeconfig
 CONTROL_PLANE_KUBE=$(labcli -d=dc1 --kube | grep -v domain:)
+oc --kubeconfig ${CONTROL_PLANE_KUBE} -n k8ssandra-operator scale deployment k8ssandra-operator --replicas=0
+
 for i in dc2 dc3
 do
   REGION_KUBE=$(labcli -d=${i} --kube | grep -v domain:)
@@ -129,13 +187,13 @@ clusters:
 contexts:
 - context:
     cluster: ${cluster}
-    user: k8ssandra-operator
-  name: ${cluster}-k8ssandra
-current-context: ${cluster}-k8ssandra
+    user: ${cluster}-k8ssandra-operator
+  name: ${cluster}
+current-context: ${cluster}
 kind: Config
 preferences: {}
 users:
-- name: k8ssandra-operator
+- name: ${cluster}-k8ssandra-operator
   user:
     token: ${sa_token}
 EOF
@@ -146,17 +204,14 @@ cat << EOF | oc --kubeconfig ${CONTROL_PLANE_KUBE} apply -n k8ssandra-operator -
 apiVersion: config.k8ssandra.io/v1beta1
 kind: ClientConfig
 metadata:
-  name: ${cluster}-k8ssandra
+  name: ${cluster}
 spec:
-  contextName: ${cluster}-k8ssandra
+  contextName: ${cluster}
   kubeConfigSecret:
     name: ${cluster}-config
 EOF
 
 done
-
-oc --kubeconfig ${CONTROL_PLANE_KUBE} -n k8ssandra-operator scale deployment k8ssandra-operator --replicas=0
-sleep 3
 oc --kubeconfig ${CONTROL_PLANE_KUBE} -n k8ssandra-operator scale deployment k8ssandra-operator --replicas=1
 ```
 
@@ -166,7 +221,7 @@ oc --kubeconfig ${CONTROL_PLANE_KUBE} -n k8ssandra-operator scale deployment k8s
 for i in dc1 dc2 dc3
 do
   REGION_KUBE=$(labcli -d=${i} --kube | grep -v domain:)
-  oc --kubeconfig ${CONTROL_PLANE_KUBE} adm policy add-scc-to-user privileged -z default -n k8ssandra-operator
+  oc --kubeconfig ${REGION_KUBE} adm policy add-scc-to-user anyuid -z default -n k8ssandra-operator
 done
 
 labenv -k -d=dc1
@@ -175,10 +230,12 @@ cat <<EOF | oc -n k8ssandra-operator apply -f -
 apiVersion: k8ssandra.io/v1alpha1
 kind: K8ssandraCluster
 metadata:
-  name: k8ssandra-cluster
+  name: k8ssandra-cluster-1
 spec:
+  auth: false
   cassandra:
-    serverVersion: "4.0.1"
+    serverVersion: ${CASS_VER}
+    serverImage: ${PROXY_REGISTRY}/k8ssandra/cass-management-api:${CASS_VER}
     storageConfig:
       cassandraDataVolumeClaimSpec:
         storageClassName: rook-ceph-block
@@ -195,60 +252,135 @@ spec:
     datacenters:
       - metadata:
           name: dc1
-        size: 3
-        stargate:
-          size: 1
-          heapSize: 256M
+        size: 1
+        jmxInitContainerImage:
+          registry: ${PROXY_REGISTRY}
+          repository: k8ssandra
+          name: busybox
+          tag: ${BUSYBOX_VER}
       - metadata:
           name: dc2
-        k8sContext: okd4-region-02-k8ssandra
-        size: 3
-        stargate:
-          size: 1
-          heapSize: 256M
+        k8sContext: okd4-region-02
+        size: 1
+        jmxInitContainerImage:
+          registry: ${PROXY_REGISTRY}
+          repository: k8ssandra
+          name: busybox
+          tag: ${BUSYBOX_VER}
       - metadata:
           name: dc3
-        k8sContext: okd4-region-03-k8ssandra
-        size: 3
+        k8sContext: okd4-region-03
+        size: 1
+        jmxInitContainerImage:
+          registry: ${PROXY_REGISTRY}
+          repository: k8ssandra
+          name: busybox
+          tag: ${BUSYBOX_VER}
+EOF
+
+cat <<EOF | oc -n k8ssandra-operator apply -f -
+apiVersion: k8ssandra.io/v1alpha1
+kind: K8ssandraCluster
+metadata:
+  name: k8ssandra-cluster
+spec:
+  cassandra:
+    serverVersion: ${CASS_VER}
+    serverImage: ${PROXY_REGISTRY}/k8ssandra/cass-management-api:${CASS_VER}
+    storageConfig:
+      cassandraDataVolumeClaimSpec:
+        storageClassName: rook-ceph-block
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 20Gi
+    config:
+      jvmOptions:
+        heapSize: 512M
+    networking:
+      hostNetwork: false 
+    datacenters:
+      - metadata:
+          name: dc1
+        size: 1
         stargate:
           size: 1
           heapSize: 256M
+          containerImage: 
+            registry: ${PROXY_REGISTRY}
+            repository: k8ssandra
+            name: stargate-4_0
+            tag: ${STARGATE_VER}
+        jmxInitContainerImage:
+          registry: ${PROXY_REGISTRY}
+          repository: k8ssandra
+          name: busybox
+          tag: ${BUSYBOX_VER}
+      - metadata:
+          name: dc2
+        k8sContext: okd4-region-02
+        size: 1
+        stargate:
+          size: 1
+          heapSize: 256M
+          containerImage: 
+            registry: ${PROXY_REGISTRY}
+            repository: k8ssandra
+            name: stargate-4_0
+            tag: ${STARGATE_VER}
+        jmxInitContainerImage:
+          registry: ${PROXY_REGISTRY}
+          repository: k8ssandra
+          name: busybox
+          tag: ${BUSYBOX_VER}
+      - metadata:
+          name: dc3
+        k8sContext: okd4-region-03
+        size: 1
+        stargate:
+          size: 1
+          heapSize: 256M
+          containerImage: 
+            registry: ${PROXY_REGISTRY}
+            repository: k8ssandra
+            name: stargate-4_0
+            tag: ${STARGATE_VER}
+        jmxInitContainerImage:
+          registry: ${PROXY_REGISTRY}
+          repository: k8ssandra
+          name: busybox
+          tag: ${BUSYBOX_VER}
 EOF
+  
 ```
-
-docker.io/library/busybox:1.34.1
-
 
 ## Delete Cluster
 
 ```bash
-labenv -k -d=dc1
-oc delete K8ssandraCluster k8ssandra-cluster -n k8ssandra-operator
+oc --kubeconfig $(labcli -d=dc1 --kube | grep -v domain:) delete K8ssandraCluster k8ssandra-cluster -n k8ssandra-operator
 ```
 
 ## Delete ClientConfigs
 
 ```bash
 CONTROL_PLANE_KUBE=$(labcli -d=dc1 --kube | grep -v domain:)
+oc --kubeconfig ${CONTROL_PLANE_KUBE} -n k8ssandra-operator scale deployment k8ssandra-operator --replicas=0
 for i in dc1 dc2 dc3
 do
   REGION_KUBE=$(labcli -d=${i} --kube | grep -v domain:)
   cluster=$(oc --kubeconfig ${REGION_KUBE} config view -o jsonpath="{.contexts[0].context.cluster}")
   oc --kubeconfig ${CONTROL_PLANE_KUBE} -n k8ssandra-operator delete secret ${cluster}-config
-  oc --kubeconfig ${CONTROL_PLANE_KUBE} -n k8ssandra-operator delete ClientConfig ${cluster}-k8ssandra
+  oc --kubeconfig ${CONTROL_PLANE_KUBE} -n k8ssandra-operator delete ClientConfig ${cluster}
 done
-oc --kubeconfig ${CONTROL_PLANE_KUBE} -n k8ssandra-operator scale deployment k8ssandra-operator --replicas=0
-sleep 3
 oc --kubeconfig ${CONTROL_PLANE_KUBE} -n k8ssandra-operator scale deployment k8ssandra-operator --replicas=1
 ```
 
 ## Delete K8ssandra
 
 ```bash
-labenv -k -d=dc1
-oc delete -f ${OKD_LAB_PATH}/k8ssandra-work-dir/k8ssandra-control-plane.yaml
-labenv -k -d=dc2
-oc delete -f ${OKD_LAB_PATH}/k8ssandra-work-dir/k8ssandra-data-plane.yaml
-labenv -k -d=dc3
-oc delete -f ${OKD_LAB_PATH}/k8ssandra-work-dir/k8ssandra-data-plane.yaml
+
+oc --kubeconfig $(labcli -d=dc1 --kube | grep -v domain:) delete -f ${OKD_LAB_PATH}/k8ssandra-work-dir/k8ssandra-control-plane.yaml
+oc --kubeconfig $(labcli -d=dc2 --kube | grep -v domain:) delete -f ${OKD_LAB_PATH}/k8ssandra-work-dir/k8ssandra-data-plane.yaml
+oc --kubeconfig $(labcli -d=dc3 --kube | grep -v domain:) delete -f ${OKD_LAB_PATH}/k8ssandra-work-dir/k8ssandra-data-plane.yaml
 ```
