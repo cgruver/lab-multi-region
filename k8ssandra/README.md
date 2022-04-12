@@ -1,5 +1,6 @@
 ## K8ssandra Install
 
+Dependency: [https://upstreamwithoutapaddle.com/home-lab/labcli/](https://upstreamwithoutapaddle.com/home-lab/labcli/)
 
 ### Intall Cert Manager:
 

@@ -1,5 +1,7 @@
 ### Install
 
+Dependency: [https://upstreamwithoutapaddle.com/home-lab/labcli/](https://upstreamwithoutapaddle.com/home-lab/labcli/)
+
 Install subctl
 
 ```bash
