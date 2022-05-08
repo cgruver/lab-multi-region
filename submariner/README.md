@@ -26,28 +26,29 @@ do
 done
 ```
 
-Prepare Kubeconfig
+Prepare Nodes:
 
 ```bash
-export KUBECONFIG=${OKD_LAB_PATH}/lab-config/cluster-kubeconfig
-touch ${KUBECONFIG}
-
-labcli --login
-```
-
-Label Nodes:
-
-```bash
-for region in 1 2 3
+labctx cp
+for node in $(labcli --nodes -cp)
 do
-  labenv -k -d=dc${region}
-  for i in 0 1 2
-  do
-    oc label nodes okd4-region-0${region}-worker-${i}.dc${region}.${LAB_DOMAIN} submariner.io/gateway=true --overwrite
-    oc annotate nodes okd4-region-0${region}-worker-${i}.dc${region}.${LAB_DOMAIN} gateway.submariner.io/public-ip=dns:okd4-region-0${region}-worker-${i}.dc${region}.${LAB_DOMAIN} --overwrite
-  done
+  oc --kubeconfig ${KUBE_INIT_CONFIG} label nodes ${node} submariner.io/gateway=true --overwrite
+  oc --kubeconfig ${KUBE_INIT_CONFIG} annotate nodes ${node} gateway.submariner.io/public-ip=dns:${node} --overwrite
 done
+gw_count=$(labcli --nodes -cp | wc -l)
+subctl cloud prepare generic --kubeconfig ${KUBE_INIT_CONFIG} --gateways ${gw_count}
 
+for region in dc1 dc2 dc3
+do
+  labctx ${region}
+  for node in $(labcli --nodes -cn)
+  do
+    oc --kubeconfig ${KUBE_INIT_CONFIG} label nodes ${node} submariner.io/gateway=true --overwrite
+    oc --kubeconfig ${KUBE_INIT_CONFIG} annotate nodes ${node} gateway.submariner.io/public-ip=dns:${node} --overwrite
+  done
+  gw_count=$(labcli --nodes -cn | wc -l)
+  subctl cloud prepare generic --kubeconfig ${KUBE_INIT_CONFIG} --gateways ${gw_count}
+done
 ```
 
 Install Submariner:
@@ -55,31 +56,31 @@ Install Submariner:
 ```bash
 SUBMARINER_VER=$(subctl version | cut -d: -f2 | cut -dv -f2)
 
-for i in dc1 dc2 dc3
-do
-labctx ${i}
-  subctl cloud prepare generic --kubeconfig ${KUBE_INIT_CONFIG} --gateways 3
-done
-
-labctx dc1
+labctx cp
 subctl deploy-broker --kubeconfig ${KUBE_INIT_CONFIG} --repository ${PROXY_REGISTRY}/submariner --version ${SUBMARINER_VER} --globalnet=false
 mv broker-info.subm ${OKD_LAB_PATH}/lab-config/broker-info.subm
 
-for i in dc1 dc2 dc3
+for i in cp dc1 dc2 dc3
 do
   labctx ${i}
   subctl join ${OKD_LAB_PATH}/lab-config/broker-info.subm --kubeconfig ${KUBE_INIT_CONFIG} --repository ${PROXY_REGISTRY}/submariner --version ${SUBMARINER_VER} --natt=false --cable-driver libreswan --globalnet=false
 done
+```
 
-# --natt=false --preferred-server=true --cable-driver libreswan --globalnet=false --force-udp-encaps
+Uninstall Submariner:
 
-for i in dc1 dc2 dc3
+```bash
+for i in dc1 dc2 dc3 cp
 do
   labctx ${i}
   subctl uninstall --kubeconfig ${KUBE_INIT_CONFIG} --yes
   subctl cloud cleanup generic --kubeconfig ${KUBE_INIT_CONFIG}
 done
+```
 
+## Notes
+
+```bash
 subctl show all --kubeconfig ${KUBE_INIT_CONFIG}
 subctl diagnose all --kubeconfig ${KUBE_INIT_CONFIG}
 subctl diagnose firewall inter-cluster ${OKD_LAB_PATH}/lab-config/okd4-region-01-dc1-${LAB_DOMAIN}/kubeconfig ${OKD_LAB_PATH}/lab-config/okd4-region-02-dc2-${LAB_DOMAIN}/kubeconfig
@@ -87,5 +88,4 @@ subctl diagnose firewall inter-cluster ${OKD_LAB_PATH}/lab-config/okd4-region-01
 oc patch pod ${POD} --type json -p '[{"op": "replace", "path": "/spec/containers/0/image", "value": "${PROXY_REGISTRY}/submariner/nettest:0.12.0"}]'
 
 quay.io/submariner/nettest:devel
-
 ```
