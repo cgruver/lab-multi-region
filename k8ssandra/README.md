@@ -33,6 +33,7 @@ do
   podman pull ${image_registry}/${image_name}:${image_version}
   podman tag ${image_registry}/${image_name}:${image_version} ${LOCAL_REGISTRY}/k8ssandra/${image_name}:${image_version}
   podman push --tls-verify=false ${LOCAL_REGISTRY}/k8ssandra/${image_name}:${image_version}
+  image_index=$(( ${image_index} + 1 ))
 done
 ```
 
