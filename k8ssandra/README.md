@@ -1,8 +1,8 @@
-## K8ssandra Install
+# K8ssandra Install
 
 Dependency: [https://upstreamwithoutapaddle.com/home-lab/labcli/](https://upstreamwithoutapaddle.com/home-lab/labcli/)
 
-### Set Up For Install
+## Set Up For Install
 
 ```bash
 K8SSANDRA_WORKDIR=${OKD_LAB_PATH}/k8ssandra-work-dir
@@ -13,20 +13,13 @@ git clone https://github.com/cgruver/lab-multi-region.git ${K8SSANDRA_WORKDIR}/l
 . ${K8SSANDRA_WORKDIR}/lab-multi-region/k8ssandra/versions.sh
 ```
 
-### Copy Images to Lab Nexus Registry
+## Copy Images to Lab Nexus Registry
 
 ```bash
 podman machine start
 
 labctx cp
 podman login -u openshift-mirror ${LOCAL_REGISTRY}
-
-for image in cert-manager-cainjector cert-manager-controller cert-manager-webhook
-do
-  podman pull quay.io/jetstack/${image}:${CERT_MGR_VER}
-  podman tag quay.io/jetstack/${image}:${CERT_MGR_VER} ${LOCAL_REGISTRY}/jetstack/${image}:${CERT_MGR_VER}
-  podman push --tls-verify=false ${LOCAL_REGISTRY}/jetstack/${image}:${CERT_MGR_VER}
-done
 
 envsubst < ${K8SSANDRA_WORKDIR}/lab-multi-region/k8ssandra/images.yaml > ${K8SSANDRA_WORKDIR}/images.yaml
 IMAGE_YAML=${K8SSANDRA_WORKDIR}/images.yaml
@@ -43,7 +36,7 @@ do
 done
 ```
 
-### Intall Cert Manager:
+## Install Cert Manager
 
 ```bash
 wget -O ${K8SSANDRA_WORKDIR}/tmp/cert-manager.yaml https://github.com/jetstack/cert-manager/releases/download/${CERT_MGR_VER}/cert-manager.yaml
