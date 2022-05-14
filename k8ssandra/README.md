@@ -60,6 +60,7 @@ rm ${K8SSANDRA_WORKDIR}/tmp/cert-manager.yaml
 ```bash
 for DEPLOY_TYPE in control-plane data-plane
 do
+  export DEPLOY_TYPE
   envsubst < ${K8SSANDRA_WORKDIR}/lab-multi-region/k8ssandra/k8ssandra-kustomization.yaml > ${K8SSANDRA_WORKDIR}/tmp/kustomization.yaml
   kustomize build ${K8SSANDRA_WORKDIR}/tmp > ${K8SSANDRA_WORKDIR}/k8ssandra-${DEPLOY_TYPE}.yaml
 done
