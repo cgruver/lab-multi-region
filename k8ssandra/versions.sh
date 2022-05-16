@@ -1,6 +1,6 @@
 export CERT_MGR_VER=v1.8.0
-export CASS_OPER_VER=v1.10.3
-export K8SSANDRA_VER=v1.0.2
+export CASS_OPER_VER=v1.11.0
+export K8SSANDRA_VER=v1.1.0
 export BUSYBOX_VER=1.34.1
 export STARGATE_VER=v1.0.45
 export REAPER_VER=3.1.1
