@@ -6,3 +6,5 @@ Dependency: [https://upstreamwithoutapaddle.com/home-lab/labcli/](https://upstre
 [Submariner Install](submariner/README.md)
 
 [K8ssandra Install](k8ssandra/README.md)
+
+Kafka - WIP
