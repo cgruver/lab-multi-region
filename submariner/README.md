@@ -5,7 +5,7 @@ Dependency: [https://upstreamwithoutapaddle.com/home-lab/labcli/](https://upstre
 Install subctl
 
 ```bash
-curl -Ls https://get.submariner.io | DESTDIR=${OKD_LAB_PATH}/bin bash
+curl -Ls https://get.submariner.io | DESTDIR=${OKD_LAB_PATH}/bin VERSION=v0.12.0 bash
 ```
 
 Mirror Images
