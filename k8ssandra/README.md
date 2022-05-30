@@ -5,7 +5,7 @@ Dependency: [https://upstreamwithoutapaddle.com/home-lab/labcli/](https://upstre
 ## Set Up For Install
 
 ```bash
-K8SSANDRA_WORKDIR=${OKD_LAB_PATH}/k8ssandra-work-dir
+export K8SSANDRA_WORKDIR=${OKD_LAB_PATH}/k8ssandra-work-dir
 mkdir -p ${K8SSANDRA_WORKDIR}/cert-manager-install
 mkdir ${K8SSANDRA_WORKDIR}/tmp
 
@@ -83,7 +83,7 @@ do
   labctx ${i}
   oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator scale deployment cass-operator-controller-manager --replicas=0
   oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator scale deployment k8ssandra-operator --replicas=0
-  oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator patch configmap cass-operator-manager-config --patch $(envsubst < ${K8SSANDRA_WORKDIR}/lab-multi-region/k8ssandra/cass-config-patch.yaml)
+  oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator patch configmap cass-operator-manager-config --patch="$(envsubst < ${K8SSANDRA_WORKDIR}/lab-multi-region/k8ssandra/cass-config-patch.yaml)"
   oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator scale deployment cass-operator-controller-manager --replicas=1
   oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator scale deployment k8ssandra-operator --replicas=1
 done
