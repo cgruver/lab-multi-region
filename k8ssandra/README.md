@@ -99,13 +99,13 @@ oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator scale deployment k8ssa
 for i in dc1 dc2 dc3
 do
   labctx ${i}
-  sa_secret=$(oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator get serviceaccount k8ssandra-operator -o jsonpath='{.secrets[0].name}')
+  sa_secret=$(oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator get serviceaccount k8ssandra-operator -o yaml | yq e ".secrets" - | grep token | cut -d" " -f3)
   sa_token=$(oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator get secret $sa_secret -o jsonpath='{.data.token}' | base64 -d)
   ca_cert=$(oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator get secret $sa_secret -o jsonpath="{.data['ca\.crt']}")
   cluster=$(oc --kubeconfig ${KUBE_INIT_CONFIG} config view -o jsonpath="{.contexts[0].context.cluster}")
   cluster_addr=$(oc --kubeconfig ${KUBE_INIT_CONFIG} config view -o jsonpath="{.clusters[0].cluster.server}")
 
-  SECRET_FILE=${K8SSANDRA_WORKDIR}/tmp/kubeconfig
+  export SECRET_FILE=${K8SSANDRA_WORKDIR}/tmp/kubeconfig
 
   envsubst < ${K8SSANDRA_WORKDIR}/lab-multi-region/k8ssandra/kubeconfig-secret.yaml > ${SECRET_FILE}
 

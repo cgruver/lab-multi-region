@@ -16,7 +16,7 @@ spec:
             storage: 20Gi
     config:
       jvmOptions:
-        heapSize: 512M
+        heapSize: 1024M
     networking:
       hostNetwork: false 
     datacenters:
@@ -29,6 +29,15 @@ spec:
           repository: k8ssandra
           name: busybox
           tag: ${BUSYBOX_VER}
+        stargate:
+          size: 3
+          heapSize: 512M
+          allowStargateOnDataNodes: true
+          containerImage: 
+            registry: ${PROXY_REGISTRY}
+            repository: k8ssandra
+            name: stargate-4_0
+            tag: ${STARGATE_VER}
       - metadata:
           name: dc2
         k8sContext: okd4-region-02
@@ -38,6 +47,15 @@ spec:
           repository: k8ssandra
           name: busybox
           tag: ${BUSYBOX_VER}
+        stargate:
+          size: 3
+          heapSize: 512M
+          allowStargateOnDataNodes: true
+          containerImage: 
+            registry: ${PROXY_REGISTRY}
+            repository: k8ssandra
+            name: stargate-4_0
+            tag: ${STARGATE_VER}
       - metadata:
           name: dc3
         k8sContext: okd4-region-03
@@ -48,8 +66,9 @@ spec:
           name: busybox
           tag: ${BUSYBOX_VER}
         stargate:
-          size: 1
-          heapSize: 256M
+          size: 3
+          heapSize: 512M
+          allowStargateOnDataNodes: true
           containerImage: 
             registry: ${PROXY_REGISTRY}
             repository: k8ssandra
