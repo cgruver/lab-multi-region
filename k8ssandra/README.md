@@ -125,11 +125,7 @@ oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator scale deployment k8ssa
 
 ```bash
 labctx cp
-oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator scale deployment k8ssandra-operator --replicas=0
-
 envsubst < ${K8SSANDRA_WORKDIR}/lab-multi-region/k8ssandra/k8ssandra-cluster.yaml | oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator apply -f -
-
-oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator scale deployment k8ssandra-operator --replicas=1
 ```
 
 ## Delete Cluster
@@ -167,4 +163,39 @@ do
   labctx ${i}
   oc --kubeconfig ${KUBE_INIT_CONFIG} delete -f ${K8SSANDRA_WORKDIR}/k8ssandra-data-plane.yaml
 done
+```
+
+## Expose Stargate Services:
+
+for i in dc1 dc2 dc3
+do
+  labctx ${i}
+  oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator create route edge sg-graphql --service=k8ssandra-cluster-${i}-stargate-service --port=8080
+  oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator create route edge sg-auth --service=k8ssandra-cluster-${i}-stargate-service --port=8081
+  oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator create route edge sg-rest --service=k8ssandra-cluster-${i}-stargate-service --port=8082
+done
+
+## Expose the Management API:
+
+for i in dc1 dc2 dc3
+do
+  labctx ${i}
+  oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator create route edge sg-graphql --service=k8ssandra-cluster-${i}-stargate-service --port=8080
+done
+
+## Connect To the Cluster
+
+```bash
+POD_NAME=$(oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator get statefulsets --selector app.kubernetes.io/name=cassandra -o jsonpath='{.items[0].metadata.name}')-0
+oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator port-forward ${POD_NAME} 9042
+
+labctx dc1
+
+CLUSTER_INIT_USER=$(oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator get secret k8ssandra-cluster-superuser -o jsonpath="{.data.username}" | base64 -d)
+CLUSTER_INIT_PWD=$(oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator get secret k8ssandra-cluster-superuser -o jsonpath="{.data.password}" | base64 -d)
+
+oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator port-forward svc/k8ssandra-cluster-dc1-stargate-service 9042
+
+cqlsh -u ${CLUSTER_INIT_USER} -p ${CLUSTER_INIT_PWD} -e CREATE ROLE IF NOT EXISTS cajun-navy
+
 ```

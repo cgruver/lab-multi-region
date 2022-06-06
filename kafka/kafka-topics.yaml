@@ -1,0 +1,201 @@
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: incident-reported
+  labels:
+    strimz.io/cluster: cajun-navy
+  namespace: cajun-navy
+spec:
+  config:
+    retention.ms: 604800000
+    segment.bytes: 1073741824
+  partitions: 10
+  replicas: 3
+  topicName: incident-reported
+
+---
+
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: incident-updated
+  labels:
+    strimz.io/cluster: cajun-navy
+  namespace: cajun-navy
+spec:
+  config:
+    retention.ms: 604800000
+    segment.bytes: 1073741824
+  partitions: 10
+  replicas: 3
+  topicName: incident-updated
+
+---
+
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: incident-update-location
+  labels:
+    strimz.io/cluster: cajun-navy
+  namespace: cajun-navy
+spec:
+  config:
+    retention.ms: 604800000
+    segment.bytes: 1073741824
+  partitions: 10
+  replicas: 3
+  topicName: incident-update-location
+
+---
+
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: incident-update-status
+  labels:
+    strimz.io/cluster: cajun-navy
+  namespace: cajun-navy
+spec:
+  config:
+    retention.ms: 604800000
+    segment.bytes: 1073741824
+  partitions: 10
+  replicas: 3
+  topicName: incident-update-status
+
+---
+
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: incident-assigned
+  labels:
+    strimz.io/cluster: cajun-navy
+  namespace: cajun-navy
+spec:
+  config:
+    retention.ms: 604800000
+    segment.bytes: 1073741824
+  partitions: 10
+  replicas: 3
+  topicName: incident-assigned
+
+---
+
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: responder-info-update
+  labels:
+    strimz.io/cluster: cajun-navy
+  namespace: cajun-navy
+spec:
+  config:
+    retention.ms: 604800000
+    segment.bytes: 1073741824
+  partitions: 10
+  replicas: 3
+  topicName: responder-info-update
+
+---
+
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: responder-location-update
+  labels:
+    strimz.io/cluster: cajun-navy
+  namespace: cajun-navy
+spec:
+  config:
+    retention.ms: 604800000
+    segment.bytes: 1073741824
+  partitions: 10
+  replicas: 3
+  topicName: responder-location-update
+
+---
+
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: responder-availability-update
+  labels:
+    strimz.io/cluster: cajun-navy
+  namespace: cajun-navy
+spec:
+  config:
+    retention.ms: 604800000
+    segment.bytes: 1073741824
+  partitions: 10
+  replicas: 3
+  topicName: responder-availability-update
+
+---
+
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: responder-created
+  labels:
+    strimz.io/cluster: cajun-navy
+  namespace: cajun-navy
+spec:
+  config:
+    retention.ms: 604800000
+    segment.bytes: 1073741824
+  partitions: 10
+  replicas: 3
+  topicName: responder-created
+
+---
+
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: responder-updated
+  labels:
+    strimz.io/cluster: cajun-navy
+  namespace: cajun-navy
+spec:
+  config:
+    retention.ms: 604800000
+    segment.bytes: 1073741824
+  partitions: 10
+  replicas: 3
+  topicName: responder-updated
+
+---
+
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: responder-location-updated
+  labels:
+    strimz.io/cluster: cajun-navy
+  namespace: cajun-navy
+spec:
+  config:
+    retention.ms: 604800000
+    segment.bytes: 1073741824
+  partitions: 10
+  replicas: 3
+  topicName: responder-location-updated
+
+---
+
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: priority-zone-clear
+  labels:
+    strimz.io/cluster: cajun-navy
+  namespace: cajun-navy
+spec:
+  config:
+    retention.ms: 604800000
+    segment.bytes: 1073741824
+  partitions: 10
+  replicas: 3
+  topicName: priority-zone-clear
