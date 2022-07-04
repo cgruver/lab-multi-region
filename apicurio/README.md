@@ -1,5 +1,11 @@
 # Install Apicurio Studion on Raspberry Pi
 
+## Use Podman to build Pi Image
+
+```bash
+podman run --privileged --device=/dev/sdc:/dev/pi-vol:rwm -it localhost/pi-builder
+```
+
 ## Install JDK 11
 
 ```bash
