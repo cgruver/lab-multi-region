@@ -167,6 +167,7 @@ done
 
 ## Expose Stargate Services:
 
+```bash
 for i in dc1 dc2 dc3
 do
   labctx ${i}
@@ -174,14 +175,17 @@ do
   oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator create route edge sg-auth --service=k8ssandra-cluster-${i}-stargate-service --port=8081
   oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator create route edge sg-rest --service=k8ssandra-cluster-${i}-stargate-service --port=8082
 done
+```
 
 ## Expose the Management API:
 
+```bash
 for i in dc1 dc2 dc3
 do
   labctx ${i}
   oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator create route edge sg-graphql --service=k8ssandra-cluster-${i}-stargate-service --port=8080
 done
+```
 
 ## Connect To the Cluster
 
@@ -197,5 +201,4 @@ CLUSTER_INIT_PWD=$(oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator get
 oc --kubeconfig ${KUBE_INIT_CONFIG} -n k8ssandra-operator port-forward svc/k8ssandra-cluster-dc1-stargate-service 9042
 
 cqlsh -u ${CLUSTER_INIT_USER} -p ${CLUSTER_INIT_PWD} -e CREATE ROLE IF NOT EXISTS cajun-navy
-
 ```
